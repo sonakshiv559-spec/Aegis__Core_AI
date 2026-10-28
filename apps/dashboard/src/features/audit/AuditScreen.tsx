@@ -3,11 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import { FourStateBadge } from '@/components/safety/FourStateBadge';
 import { DiscrepancyViewer } from '@/components/safety/DiscrepancyViewer';
-import {
-  ShieldCheck,
-  Download,
-  Search,
-} from 'lucide-react';
+import { ShieldCheck, Download, Search } from 'lucide-react';
 
 export const AuditScreen: React.FC = () => {
   const { data: incidents, isLoading } = useQuery({
@@ -19,8 +15,8 @@ export const AuditScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] text-slate-400 font-mono text-sm animate-pulse">
-        Verifying Cryptographic Audit Hashes & Invariant Contracts...
+      <div className="flex items-center justify-center min-h-[60vh] text-slate-400 text-sm animate-pulse">
+        Verifying Closed-Loop Audit Records...
       </div>
     );
   }
@@ -36,130 +32,105 @@ export const AuditScreen: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
+  const filteredIncidents = (incidents || []).filter(
+    (inc) =>
+      inc.id.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      inc.title.toLowerCase().includes(searchFilter.toLowerCase())
+  );
+
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-indigo-400" />
-            <span>Closed-Loop Verification & Append-Only Audit Trail</span>
+            <span>Closed-Loop Verification & Audit</span>
           </h1>
-          <p className="text-xs text-slate-400 font-mono mt-0.5">
-            Independent observation verification, discrepancy tracking, and immutable decision provenance
+          <p className="text-xs text-slate-400 mt-0.5">
+            Independent ground-truth observation, discrepancy logs, and immutable action trail
           </p>
         </div>
 
         <button
           type="button"
           onClick={exportAuditLog}
-          className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-mono text-xs flex items-center gap-2 border border-slate-700 transition-colors self-start sm:self-auto"
+          className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 border border-slate-700 transition-colors self-start sm:self-auto"
         >
-          <Download className="w-4 h-4 text-indigo-400" />
+          <Download className="w-3.5 h-3.5 text-indigo-400" />
           <span>Export Audit Dossier (.JSON)</span>
         </button>
       </div>
 
-      {/* Discrepancy & Verification Spotlight */}
-      <div className="space-y-4">
-        <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-          <span>Active Postcondition Verification Checks</span>
-          <span className="text-[10px] font-mono text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 rounded">
-            Closed-Loop Reconciliation
-          </span>
-        </h2>
+      {/* Verification Checks Spotlight */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-bold text-white">Active Postcondition Checks</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {incidents
             ?.filter((inc) => inc.command_status || inc.verified_state)
             .map((inc) => (
-              <div key={inc.id} className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-indigo-400 font-bold">{inc.id}</span>
-                  <span className="text-slate-400">{inc.title}</span>
+              <div key={inc.id} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono text-indigo-400 font-semibold">{inc.id}</span>
+                  {inc.verified_state && <FourStateBadge state={inc.verified_state.state} />}
                 </div>
-                <DiscrepancyViewer
-                  commandStatus={inc.command_status}
-                  verifiedState={inc.verified_state}
-                />
+
+                <div className="text-xs text-white font-medium">{inc.title}</div>
+
+                {inc.verified_state?.discrepancy_detected && (
+                  <DiscrepancyViewer
+                    commandStatus={inc.command_status}
+                    verifiedState={inc.verified_state}
+                  />
+                )}
+
+                {inc.verified_state && !inc.verified_state.discrepancy_detected && (
+                  <div className="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 text-xs">
+                    {inc.verified_state.details}
+                  </div>
+                )}
               </div>
             ))}
         </div>
       </div>
 
-      {/* Append-Only Cryptographic Audit Log Table */}
-      <div className="rounded-xl bg-slate-900/80 border border-slate-800 overflow-hidden space-y-3 p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
-          <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-              Immutable Decision & Execution Ledger
-            </h3>
-            <p className="text-xs text-slate-400 font-mono">
-              Cryptographically chained records linking evidence, policies, approver IDs, and postconditions
-            </p>
-          </div>
+      {/* Immutable Incident Ledger */}
+      <div className="rounded-xl bg-slate-900/60 border border-slate-800 overflow-hidden">
+        <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h2 className="text-sm font-bold text-white">Incident Audit Ledger</h2>
 
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
+          <div className="relative w-full sm:w-64">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              placeholder="Search by ID, role, or action..."
-              className="pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500 w-64"
+              placeholder="Search audit trail..."
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-mono">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400 uppercase text-[10px]">
-                <th className="py-2.5 px-3">Timestamp / Ref</th>
-                <th className="py-2.5 px-3">Incident</th>
-                <th className="py-2.5 px-3">Authorized Action</th>
-                <th className="py-2.5 px-3">Approver & Role</th>
-                <th className="py-2.5 px-3">Policy Version</th>
-                <th className="py-2.5 px-3">Verified Outcome</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/80">
-              {incidents?.map((inc) => (
-                <tr key={inc.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-3 px-3 text-slate-400 whitespace-nowrap">
-                    <div>{new Date(inc.created_at).toLocaleDateString()}</div>
-                    <div className="text-[10px] text-slate-500">
-                      {new Date(inc.created_at).toLocaleTimeString()}
-                    </div>
-                  </td>
-                  <td className="py-3 px-3 font-bold text-indigo-400 whitespace-nowrap">
-                    {inc.id}
-                  </td>
-                  <td className="py-3 px-3 text-slate-200">
-                    {inc.selected_action?.name || (
-                      <span className="text-slate-500 italic">Investigation in progress</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-3 text-slate-300">
-                    <div>{inc.approval_contract?.approver || 'System Sentry (Observe Only)'}</div>
-                    <div className="text-[10px] text-slate-500 font-sans">
-                      {inc.approval_contract?.approver_role || 'Automated Baseline'}
-                    </div>
-                  </td>
-                  <td className="py-3 px-3 text-slate-400 whitespace-nowrap">
-                    {inc.approval_contract?.policy_version || 'sec-policy-v2.4.1'}
-                  </td>
-                  <td className="py-3 px-3 whitespace-nowrap">
-                    {inc.verified_state ? (
-                      <FourStateBadge state={inc.verified_state.state} />
-                    ) : (
-                      <span className="text-slate-500 text-[11px]">Unexecuted</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="divide-y divide-slate-800">
+          {filteredIncidents.map((inc) => (
+            <div key={inc.id} className="p-3.5 hover:bg-slate-800/30 transition-colors flex items-center justify-between text-xs">
+              <div className="space-y-1 max-w-[60%]">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-indigo-400 font-semibold">{inc.id}</span>
+                  <span className="text-[10px] uppercase font-semibold text-slate-400">{inc.severity}</span>
+                  <span className="text-slate-500">•</span>
+                  <span className="text-slate-400">{inc.status}</span>
+                </div>
+                <div className="text-slate-200 truncate">{inc.title}</div>
+              </div>
+
+              <div className="text-right text-[11px] text-slate-400">
+                <div>{new Date(inc.created_at).toLocaleDateString()}</div>
+                <div className="text-slate-500 font-mono">{inc.tenant_id}</div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

@@ -10,56 +10,51 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full h-16 bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 flex items-center justify-between">
-        {/* Brand & Platform Identity */}
+      <header className="sticky top-0 z-40 w-full h-14 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 px-4 sm:px-6 flex items-center justify-between font-sans">
+        {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-950">
-            <Shield className="w-5 h-5 text-white" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-slate-950" />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600 text-white shadow">
+            <Shield className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-base font-bold text-white tracking-tight">AEGISCORE AI</span>
-              <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 rounded">
-                ENTERPRISE SOC
+              <span className="text-sm font-bold text-white tracking-tight">AEGISCORE</span>
+              <span className="text-[10px] font-semibold px-1.5 py-0.2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 rounded">
+                SOC
               </span>
             </div>
-            <p className="text-[11px] text-slate-300 font-mono hidden sm:block">
-              Evidence-Driven • Policy-Constrained • Verified Response
-            </p>
           </div>
         </div>
 
-        {/* Global Safety Controls & Mode */}
+        {/* Global Controls */}
         <div className="flex items-center gap-3">
-          {/* Operating Mode Selector (Default: Approval Mode) */}
-          <div className="flex items-center p-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-mono">
+          {/* Operating Mode Selector */}
+          <div className="flex items-center p-0.5 bg-slate-900 border border-slate-800 rounded-lg text-xs">
             <button
               type="button"
               onClick={() => setOperatingMode('approval')}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium",
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors font-medium text-xs",
                 operatingMode === 'approval'
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-slate-200"
               )}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Approval Mode (Default)</span>
+              <span>Approval Mode</span>
             </button>
             <button
               type="button"
               onClick={() => setOperatingMode('automatic')}
               className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all font-medium",
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors font-medium text-xs",
                 operatingMode === 'automatic'
                   ? "bg-amber-600 text-white shadow-sm"
                   : "text-slate-400 hover:text-slate-200"
               )}
-              title="Automatic Mode: Preapproved low-risk actions only. Production changes mandate approval."
             >
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-300" />
-              <span>Automatic Mode (Opt-In)</span>
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Automatic Mode</span>
             </button>
           </div>
 
@@ -68,30 +63,28 @@ export const Header: React.FC = () => {
             type="button"
             onClick={() => setIsModalOpen(true)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold border transition-all shadow-md",
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors",
               emergencyHaltActive
-                ? "bg-rose-600 text-white border-rose-500 animate-pulse shadow-rose-950"
-                : "bg-rose-950/40 text-rose-300 border-rose-700/60 hover:bg-rose-900/60 hover:text-white"
+                ? "bg-rose-600 text-white border-rose-500 animate-pulse"
+                : "bg-rose-950/30 text-rose-300 border-rose-800/40 hover:bg-rose-900/40 hover:text-white"
             )}
-            title="Immediate emergency kill switch for all automated connectors"
           >
-            <ShieldAlert className="w-4 h-4 text-rose-400" />
-            <span className="hidden md:inline">
-              {emergencyHaltActive ? 'AUTOMATION HALTED' : 'STOP ALL AUTOMATION'}
+            <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+            <span className="hidden sm:inline">
+              {emergencyHaltActive ? 'HALTED' : 'Emergency Stop'}
             </span>
           </button>
 
-          {/* User Profile Badge */}
+          {/* User Profile */}
           <div className="hidden lg:flex items-center gap-2 pl-3 border-l border-slate-800">
-            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 font-mono text-xs font-semibold">
+            <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 text-xs font-semibold">
               SV
             </div>
             <div className="text-left text-xs">
-              <div className="flex items-center gap-1 text-slate-200 font-medium">
-                <span>{currentUser.name}</span>
-                <UserCheck className="w-3 h-3 text-emerald-400" />
+              <div className="text-slate-200 font-medium leading-none">
+                {currentUser.name}
               </div>
-              <div className="text-[10px] text-slate-300 font-mono truncate max-w-[170px]" title={currentUser.role}>
+              <div className="text-[11px] text-slate-400 mt-0.5">
                 {currentUser.role}
               </div>
             </div>
