@@ -7,7 +7,8 @@ import {
   SlidersHorizontal, 
   ShieldCheck,
   Activity,
-  Database
+  Database,
+  Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
@@ -21,6 +22,12 @@ export const Sidebar: React.FC = () => {
       label: 'SOC Overview',
       icon: LayoutDashboard,
       badge: 'Live',
+    },
+    {
+      to: '/pipeline',
+      label: 'Pipeline & 6 DBs',
+      icon: Zap,
+      badge: 'Simulator',
     },
     {
       to: '/investigation/INC-2026-8841',
@@ -75,7 +82,12 @@ export const Sidebar: React.FC = () => {
                     <span>{item.label}</span>
                   </div>
                   {item.badge && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                    <span className={cn(
+                      "text-[10px] font-mono px-1.5 py-0.5 rounded border",
+                      item.badge === 'Simulator'
+                        ? "bg-indigo-950 text-indigo-300 border-indigo-500/40 animate-pulse font-semibold"
+                        : "bg-slate-800 text-slate-300 border-slate-700"
+                    )}>
                       {item.badge}
                     </span>
                   )}

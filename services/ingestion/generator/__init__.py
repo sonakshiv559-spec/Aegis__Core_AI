@@ -1,0 +1,1 @@
+"""Ingestion generator package."""

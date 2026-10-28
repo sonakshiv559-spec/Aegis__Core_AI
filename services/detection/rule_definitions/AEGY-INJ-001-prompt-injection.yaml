@@ -1,0 +1,34 @@
+# AegisCore Detection Rule: Adversarial Prompt Injection in Telemetry
+# Rule ID: AEGY-INJ-001
+# Maps to Scenario 7 (prompt_injection)
+
+id: AEGY-INJ-001
+name: Embedded Prompt Injection / Jailbreak Signature in Telemetry
+description: >
+  Detects common prompt injection patterns embedded inside untrusted telemetry fields
+  (e.g., User-Agent, process arguments, query strings) attempting to manipulate downstream
+  generative LLM evaluators.
+severity: CRITICAL
+event_class: Authentication
+activity_names:
+  - Logon
+  - TokenGeneration
+conditions:
+  any:
+    - field: actor.user_agent
+      op: regex
+      pattern: "(?i)(ignore (all )?previous instructions|system:|you are now in|override system prompt|disregard previous|maintenance mode)"
+score_contributions:
+  anomaly_score: 0.95
+  threat_confidence_base: 0.90
+  evidence_predicates:
+    - prompt_injection_signature_matched
+    - payload_isolated_in_untrusted_field
+mitre_attack:
+  tactic: Defense Evasion
+  technique: T1562
+tags:
+  - prompt_injection
+  - adversarial_ai
+  - untrusted_data
+policy_version: v1.0.0

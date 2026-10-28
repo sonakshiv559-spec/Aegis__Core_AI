@@ -14,7 +14,9 @@ import {
   ArrowUpRight, 
   Database,
   Radio,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  ArrowRight
 } from 'lucide-react';
 import {
   AreaChart,
@@ -25,7 +27,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from 'recharts';
-import { mockTimeSeriesData } from '@/mocks/metrics.mock';
+import { getRealTimeSeriesData } from '@/services/realDataService';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/lib/store';
 
@@ -79,6 +81,35 @@ export const OverviewScreen: React.FC = () => {
             </span>
           )}
         </div>
+      </div>
+
+      {/* Interactive Enterprise Architecture Banner */}
+      <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-indigo-950/40 border border-indigo-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg shadow-indigo-950/30">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center flex-shrink-0 text-indigo-400">
+            <Zap className="w-5 h-5 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-white tracking-tight">
+                Enterprise Multi-Department Pipeline & Attack Simulator
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                6 Databases Connected
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 font-mono mt-0.5">
+              Simulate live threat vectors across Finance, HR, E-Commerce, R&D, Data Lake, and IAM databases to inspect the 7-stage AegisCore response.
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/pipeline"
+          className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono text-xs font-semibold flex items-center gap-2 transition-all shadow-md shadow-indigo-950 flex-shrink-0"
+        >
+          <span>Launch Interactive Simulator</span>
+          <ArrowRight className="w-4 h-4" />
+        </Link>
       </div>
 
       {/* Primary KPI Summary Cards */}
@@ -205,7 +236,7 @@ export const OverviewScreen: React.FC = () => {
           </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={mockTimeSeriesData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={getRealTimeSeriesData()} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />

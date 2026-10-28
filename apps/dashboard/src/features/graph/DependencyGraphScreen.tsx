@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -9,14 +9,33 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { initialGraphNodes, initialGraphEdges, GraphNodeData } from '@/mocks/graph.mock';
-import { GitFork, ShieldAlert, Info } from 'lucide-react';
+import { GitFork, ShieldAlert, Info, Layers } from 'lucide-react';
+import { apiClient } from '@/api/client';
 import { cn } from '@/lib/utils';
 
 export const DependencyGraphScreen: React.FC = () => {
-  const [nodes, , onNodesChange] = useNodesState<GraphNodeData>(initialGraphNodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialGraphEdges);
-  const [selectedNode, setSelectedNode] = useState<Node<GraphNodeData> | null>(initialGraphNodes[0]);
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string>('INC-2026-8841');
+  const [nodes, setNodes, onNodesChange] = useNodesState<GraphNodeData>(initialGraphNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraphEdges);
+  const [selectedNode, setSelectedNode] = useState<Node<GraphNodeData> | null>(null);
   const [simulateBlastRadius, setSimulateBlastRadius] = useState(true);
+
+  // Load real graph when incident changes
+  useEffect(() => {
+    let isMounted = true;
+    apiClient.getDependencyGraph(selectedIncidentId).then((graph) => {
+      if (isMounted) {
+        setNodes(graph.nodes);
+        setEdges(graph.edges);
+        if (graph.nodes.length > 0) {
+          setSelectedNode(graph.nodes[0]);
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedIncidentId, setNodes, setEdges]);
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto h-[calc(100vh-5rem)] flex flex-col">
@@ -25,14 +44,29 @@ export const DependencyGraphScreen: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
             <GitFork className="w-5 h-5 text-indigo-400" />
-            <span>Asset & Service Dependency Graph</span>
+            <span>Asset & Service Dependency Graph (USP 1)</span>
           </h1>
           <p className="text-xs text-slate-400 font-mono mt-0.5">
-            Neo4j live dependency traversal for blast-radius calculation and impact-constrained containment
+            Real Neo4j topological graph traversal for blast-radius calculation and impact-constrained containment
           </p>
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Incident Selector */}
+          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono">
+            <Layers className="w-3.5 h-3.5 text-indigo-400" />
+            <select
+              value={selectedIncidentId}
+              onChange={(e) => setSelectedIncidentId(e.target.value)}
+              className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
+            >
+              <option value="INC-2026-8841" className="bg-slate-900">INC-8841 (Shared Aurora DB)</option>
+              <option value="INC-2026-8843" className="bg-slate-900">INC-8843 (PCI Lateral Enclave)</option>
+              <option value="INC-2026-8845" className="bg-slate-900">INC-8845 (AWS SG Exposure)</option>
+              <option value="INC-2026-8847" className="bg-slate-900">INC-8847 (Ransomware NFS Storage)</option>
+            </select>
+          </div>
+
           <label className="flex items-center gap-2 text-xs font-mono text-slate-300 cursor-pointer bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
             <input
               type="checkbox"
@@ -77,16 +111,16 @@ export const DependencyGraphScreen: React.FC = () => {
           <div className="absolute bottom-4 left-4 p-3 rounded-lg bg-slate-950/90 border border-slate-800 text-[11px] font-mono text-slate-300 space-y-1 backdrop-blur-sm pointer-events-none">
             <div className="text-[10px] uppercase text-slate-400 font-bold mb-1">Graph Legend</div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded bg-rose-500" /> Identity Target
+              <span className="w-2.5 h-2.5 rounded bg-rose-500" /> Malicious Threat Target
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded bg-amber-500" /> Endpoint / Worker
+              <span className="w-2.5 h-2.5 rounded bg-amber-500" /> Upstream Microservice
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded bg-slate-600" /> Microservice
+              <span className="w-2.5 h-2.5 rounded bg-emerald-500" /> Preserved Mission-Critical Asset
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded bg-indigo-500" /> Database Cluster
+              <span className="w-2.5 h-2.5 rounded ring-2 ring-amber-400 bg-amber-950" /> Collateral Disruption Warning
             </div>
           </div>
         </div>
@@ -103,49 +137,48 @@ export const DependencyGraphScreen: React.FC = () => {
               </div>
 
               <div className="space-y-2.5 text-xs font-mono">
-                <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block uppercase">Criticality Tier</span>
-                  <span className={cn(
-                    "font-bold text-xs",
-                    selectedNode.data.criticality === 'Tier 1' ? "text-rose-400" : "text-amber-400"
-                  )}>
-                    {selectedNode.data.criticality} (High Impact)
-                  </span>
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+                  <div className="text-[10px] text-slate-400 uppercase">Criticality Tier</div>
+                  <div className="font-semibold text-slate-200 mt-0.5">{selectedNode.data.criticality}</div>
                 </div>
 
-                <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block uppercase">Operational Owner</span>
-                  <span className="text-slate-200">{selectedNode.data.owner || 'Unassigned'}</span>
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+                  <div className="text-[10px] text-slate-400 uppercase">Entity Category</div>
+                  <div className="font-semibold text-slate-200 mt-0.5 capitalize">{selectedNode.data.type}</div>
                 </div>
 
-                <div className="p-2.5 rounded bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block uppercase">Incident Role</span>
-                  <span className="text-rose-300">
-                    {selectedNode.data.isThreatTarget ? 'Tagged as Threat Focal Point' : 'Downstream Dependent'}
-                  </span>
+                <div className="p-2.5 rounded-lg bg-slate-950/80 border border-slate-800">
+                  <div className="text-[10px] text-slate-400 uppercase">Owner / Team</div>
+                  <div className="font-semibold text-slate-200 mt-0.5">{selectedNode.data.owner || 'Unassigned'}</div>
                 </div>
-              </div>
 
-              {selectedNode.data.isDisruptedByAction && (
-                <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-600/40 text-amber-200 text-xs space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-amber-400 text-[11px]">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    BLAST RADIUS WARNING
+                {selectedNode.data.isThreatTarget && (
+                  <div className="p-2.5 rounded-lg bg-rose-950/40 border border-rose-800/60 text-rose-300 flex items-start gap-2">
+                    <ShieldAlert className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-[11px] leading-tight">
+                      Primary threat target or anomalous activity epicenter.
+                    </span>
                   </div>
-                  <p className="text-[11px] leading-relaxed">
-                    If Tier 2 host isolation is chosen, this service will experience immediate unplanned downtime.
-                  </p>
-                </div>
-              )}
+                )}
+
+                {simulateBlastRadius && selectedNode.data.isDisruptedByAction && (
+                  <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-amber-300 flex items-start gap-2">
+                    <Info className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-[11px] leading-tight">
+                      Predicted collateral disruption if broad containment action is executed.
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="text-xs text-slate-400 flex items-center gap-2">
-              <Info className="w-4 h-4" /> Click any graph node to inspect dependencies.
+            <div className="text-center text-slate-500 text-xs font-mono py-10">
+              Click any graph node to inspect live topological attributes.
             </div>
           )}
 
-          <div className="pt-4 border-t border-slate-800 text-[11px] text-slate-400 font-mono">
-            Dependency updates synced via Neo4j event hooks in real time.
+          <div className="pt-4 border-t border-slate-800 text-[10px] text-slate-500 font-mono">
+            Graph traversed via BFS depth=3 from target entity.
           </div>
         </div>
       </div>
