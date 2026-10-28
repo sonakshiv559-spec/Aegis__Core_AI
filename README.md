@@ -34,30 +34,30 @@ AegisCore protects complex multi-tenant environments by partitioning telemetry a
 
 ```mermaid
 flowchart TD
-    subgraph Enterprise["🏢 Enterprise Core Infrastructure"]
+    subgraph Enterprise["Enterprise Core Infrastructure"]
         direction TB
         
-        subgraph Tier1["🔒 Critical Tier 1 Databases"]
-            DB1[("💳 db-finance-billing<br/><b>Finance & Accounting</b><br/>• Engine: Aurora PostgreSQL Multi-AZ<br/>• Standard: PCI-DSS Level 1 / SOX<br/>• Records: 14.8M Ledger Entries<br/>• Rate: 15,400 qps")]
-            DB2[("🏥 db-hr-people<br/><b>Human Resources & Legal</b><br/>• Engine: Aurora Serverless v2<br/>• Standard: HIPAA / GDPR PII<br/>• Records: 42k Employee Records<br/>• Rate: 320 qps")]
-            DB3[("🛒 db-ecommerce-orders<br/><b>Digital Commerce</b><br/>• Engine: MongoDB Sharded Cluster<br/>• Standard: Customer PII / Active Carts<br/>• Records: 8.4M Users / 32M Orders<br/>• Rate: 8,900 qps")]
-            DB6[("🔑 db-iam-directory<br/><b>IT & Cyber Defense</b><br/>• Engine: OpenLDAP / Okta Sync / KDC<br/>• Standard: Zero-Trust Root Tokens<br/>• Records: 65k Identities / 8.2k Principals<br/>• Rate: 6,200 qps")]
+        subgraph Tier1["Critical Tier 1 Databases"]
+            DB1[("db-finance-billing<br/>Finance and Accounting<br/>Engine: Aurora PostgreSQL Multi-AZ<br/>Standard: PCI-DSS Level 1 / SOX<br/>Records: 14.8M Ledger Entries<br/>Rate: 15,400 qps")]
+            DB2[("db-hr-people<br/>Human Resources and Legal<br/>Engine: Aurora Serverless v2<br/>Standard: HIPAA / GDPR PII<br/>Records: 42k Employee Records<br/>Rate: 320 qps")]
+            DB3[("db-ecommerce-orders<br/>Digital Commerce<br/>Engine: MongoDB Sharded Cluster<br/>Standard: Customer PII / Active Carts<br/>Records: 8.4M Users / 32M Orders<br/>Rate: 8,900 qps")]
+            DB6[("db-iam-directory<br/>IT and Cyber Defense<br/>Engine: OpenLDAP / Okta Sync / KDC<br/>Standard: Zero-Trust Root Tokens<br/>Records: 65k Identities / 8.2k Principals<br/>Rate: 6,200 qps")]
         end
 
-        subgraph Tier2["📁 Tier 2 Department Databases"]
-            DB4[("🔬 db-rnd-intellectual-property<br/><b>R&D & Engineering</b><br/>• Engine: Enterprise Distributed NFS<br/>• Standard: ITAR / Trade Secrets<br/>• Records: 1,840 Git Repos / 450 Binaries<br/>• Rate: 1,200 qps")]
-            DB5[("📊 db-data-lake-analytics<br/><b>Business Intelligence</b><br/>• Engine: Snowflake / S3 Iceberg<br/>• Standard: Enterprise Telemetry Lake<br/>• Records: 120 TB / 4.2B Rows<br/>• Rate: 4,500 qps")]
+        subgraph Tier2["Tier 2 Department Databases"]
+            DB4[("db-rnd-intellectual-property<br/>R and D Engineering<br/>Engine: Enterprise Distributed NFS<br/>Standard: ITAR / Trade Secrets<br/>Records: 1,840 Git Repos / 450 Binaries<br/>Rate: 1,200 qps")]
+            DB5[("db-data-lake-analytics<br/>Business Intelligence<br/>Engine: Snowflake / S3 Iceberg<br/>Standard: Enterprise Telemetry Lake<br/>Records: 120 TB / 4.2B Rows<br/>Rate: 4,500 qps")]
         end
     end
 
-    subgraph ControlPlane["🛡️ AegisCore Autonomous Defense Control Plane"]
-        Ingest["Telemetry Ingestion & OCSF Normalization"]
+    subgraph ControlPlane["AegisCore Autonomous Defense Control Plane"]
+        Ingest["Telemetry Ingestion and OCSF Normalization"]
         Detect["Sliding-Window Correlation Engine"]
         Triad["Multi-Agent Investigation Triad"]
-        GraphBFS["Neo4j BFS Blast Radius Engine (USP 1)"]
-        PolicyGate["Deterministic Evidence Gate (USP 2)"]
-        Connectors["Sandboxed Connectors & Idempotency"]
-        ClosedLoop["Closed-Loop Postcondition Verifier (USP 3)"]
+        GraphBFS["Neo4j BFS Blast Radius Engine - USP 1"]
+        PolicyGate["Deterministic Evidence Gate - USP 2"]
+        Connectors["Sandboxed Connectors and Idempotency"]
+        ClosedLoop["Closed-Loop Postcondition Verifier - USP 3"]
     end
 
     DB1 -.->|Telemetry| Ingest
@@ -68,7 +68,7 @@ flowchart TD
     DB6 -.->|Telemetry| Ingest
 
     Ingest --> Detect --> Triad --> GraphBFS --> PolicyGate --> Connectors --> ClosedLoop
-    ClosedLoop -.->|Verified State & Rollback| Enterprise
+    ClosedLoop -.->|Verified State and Rollback| Enterprise
 
     classDef t1 fill:#1e1b4b,stroke:#818cf8,color:#fff,stroke-width:2px;
     classDef t2 fill:#14532d,stroke:#4ade80,color:#fff,stroke-width:2px;
@@ -111,17 +111,17 @@ $$\text{Score}(A) = w_1 \cdot \text{SecurityGain}(A) + w_2 \cdot \text{Reversibi
 
 ```mermaid
 graph TD
-    Attack["🚨 Alert: Compromised Service Account (svc-analytics-prod)"] --> Traverse["Traverse Context Graph (Neo4j BFS)"]
+    Attack["Alert: Compromised Service Account svc-analytics-prod"] --> Traverse["Traverse Context Graph Neo4j BFS"]
     
-    Traverse --> Node1["db-finance-billing (PostgreSQL Cluster)"]
-    Node1 --> Dep1["auth-service (Tier 1 Microservice)"]
-    Node1 --> Dep2["checkout-api (E-Commerce Ingress)"]
-    Node1 --> Dep3["batch-etl-pipeline (Tier 2 ETL)"]
+    Traverse --> Node1["db-finance-billing PostgreSQL Cluster"]
+    Node1 --> Dep1["auth-service Tier 1 Microservice"]
+    Node1 --> Dep2["checkout-api E-Commerce Ingress"]
+    Node1 --> Dep3["batch-etl-pipeline Tier 2 ETL"]
 
     Traverse --> Eval{"Action Planner Comparison"}
     
-    Eval -->|Option A: Blunt Playbook| Blunt["Isolate Full DB Host<br/>• Security Gain: 0.90<br/>• Disruption Cost: 0.85<br/>• Score: 0.2325<br/>❌ <b>Downs Auth & Checkout</b>"]
-    Eval -->|Option B: AegisCore Targeted| Targeted["Revoke OAuth Refresh Token<br/>• Security Gain: 0.85<br/>• Disruption Cost: 0.10<br/>• Score: 0.5325<br/>✅ <b>Zero Upstream Microservice Outage</b>"]
+    Eval -->|Option A: Blunt Playbook| Blunt["Isolate Full DB Host<br/>Security Gain: 0.90<br/>Disruption Cost: 0.85<br/>Score: 0.2325<br/>Downs Auth and Checkout"]
+    Eval -->|Option B: AegisCore Targeted| Targeted["Revoke OAuth Refresh Token<br/>Security Gain: 0.85<br/>Disruption Cost: 0.10<br/>Score: 0.5325<br/>Zero Upstream Outage"]
     
     style Blunt fill:#7f1d1d,stroke:#f87171,color:#fff
     style Targeted fill:#14532d,stroke:#4ade80,color:#fff
@@ -146,15 +146,15 @@ stateDiagram-v2
         PollGroundTruth --> CheckHealth: Inspect upstream microservices
     }
     
-    VERIFYING --> VERIFIED: Postcondition satisfied & all services healthy
-    VERIFYING --> FAILURE: Threat persists (Silent API Failure caught!)
+    VERIFYING --> VERIFIED: Postcondition satisfied and all services healthy
+    VERIFYING --> FAILURE: Threat persists - Silent API Failure caught
     VERIFYING --> PARTIAL: Target remediated but collateral service degraded
-    VERIFYING --> UNKNOWN: Telemetry timeout / sensor blackout
+    VERIFYING --> UNKNOWN: Telemetry timeout or sensor blackout
 
     VERIFIED --> CONTAINED: Safe lifecycle advance
-    FAILURE --> ESCALATED: Alert Tier-3 SOC Commander & Rollback
+    FAILURE --> ESCALATED: Alert Tier-3 SOC Commander and Rollback
     PARTIAL --> ESCALATED: Trigger Circuit-Breaker Rollback
-    UNKNOWN --> ESCALATED: Halt Automation Loop (Strict Invariant)
+    UNKNOWN --> ESCALATED: Halt Automation Loop
 ```
 
 ---
@@ -167,42 +167,42 @@ The complete response lifecycle spans 7 interconnected architectural phases:
 sequenceDiagram
     autonumber
     actor Attacker as Threat Actor
-    participant Edge as Edge / DB Sensor
-    participant Ingest as Ingestion Pipeline (Phase 2)
-    participant Detect as Fast Detection (Phase 3)
-    participant Triad as Agent Triad (Phase 4)
-    participant Graph as Context Graph (Phase 5)
-    participant Gate as Policy Gate (Phase 6)
-    participant Exec as Action Executor (Phase 7)
-    participant Verifier as Closed-Loop Verifier (Phase 8)
+    participant Edge as Edge Sensor
+    participant Ingest as Ingestion Pipeline
+    participant Detect as Fast Detection Engine
+    participant Triad as Agent Triad
+    participant Graph as Context Graph
+    participant Gate as Policy Gate
+    participant Exec as Action Executor
+    participant Verifier as Closed-Loop Verifier
     actor SOC as Tier-3 SOC Operator
 
-    Attacker->>Edge: Injects malicious SQL / Exfiltration queries
-    Edge->>Ingest: Stream raw syslog / cloud / EDR telemetry
-    Note over Ingest: Normalizes to OCSF v1.1.0 & dedups via Redis
+    Attacker->>Edge: Injects malicious SQL and exfiltration queries
+    Edge->>Ingest: Stream raw telemetry
+    Note over Ingest: Normalizes to OCSF v1.1.0 and dedups via Redis
     Ingest->>Detect: Publish normalized OCSF event
-    Note over Detect: Sliding-window rule match in <50ms (Z-Score +4.8)
-    Detect->>Triad: Flag incident & spawn investigation
-    Note over Triad: Sentry ➔ Investigator ➔ Validator (tags is_inference)
+    Note over Detect: Sliding-window rule match under 50ms
+    Detect->>Triad: Flag incident and spawn investigation
+    Note over Triad: Sentry to Investigator to Validator
     Triad->>Graph: Query target dependency subgraph
-    Note over Graph: BFS traversal depth=3 calculates blast radius
-    Graph->>Gate: Submit candidate action (Targeted vs Blunt)
-    Note over Gate: Deterministic predicates evaluated; SHA-256 contract sealed
-    alt Automatic Mode (Preapproved Low-Risk)
+    Note over Graph: BFS traversal depth 3 calculates blast radius
+    Graph->>Gate: Submit candidate actions
+    Note over Gate: Deterministic predicates evaluated and SHA-256 contract sealed
+    alt Automatic Mode - Preapproved Low Risk
         Gate->>Exec: Issue signed execution token
-    else Approval Mode (Default)
+    else Approval Mode - Human in the Loop
         Gate->>SOC: Request cryptographically bound human approval
-        SOC->>Gate: Authorize with rationale & role signature
+        SOC->>Gate: Authorize with rationale and role signature
         Gate->>Exec: Dispatch execution token
     end
     Exec->>Edge: Connector executes scoped remediation
     Edge-->>Exec: Returns HTTP 200 OK acknowledgment
     Exec->>Verifier: Hand off to independent verifier
-    Note over Verifier: Queries authoritative state & tests upstream health
-    alt Postcondition Satisfied & Services Healthy
-        Verifier-->>SOC: VERIFIED SUCCESS — Lifecycle: CONTAINED
-    else Discrepancy Detected (Silent API Failure)
-        Verifier-->>SOC: CRITICAL DISCREPANCY — Emergency Escalation
+    Note over Verifier: Queries authoritative state and tests upstream health
+    alt Postcondition Satisfied and Services Healthy
+        Verifier-->>SOC: VERIFIED SUCCESS - Lifecycle CONTAINED
+    else Discrepancy Detected - Silent API Failure
+        Verifier-->>SOC: CRITICAL DISCREPANCY - Emergency Escalation
     end
 ```
 
