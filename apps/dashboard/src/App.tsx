@@ -8,6 +8,7 @@ import { InvestigationScreen } from '@/features/investigation/InvestigationScree
 import { DependencyGraphScreen } from '@/features/graph/DependencyGraphScreen';
 import { ResponsePlannerScreen } from '@/features/response/ResponsePlannerScreen';
 import { AuditScreen } from '@/features/audit/AuditScreen';
+import { PipelineScreen } from '@/features/pipeline/PipelineScreen';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,7 @@ export const App: React.FC = () => {
             <main className="flex-1 overflow-y-auto">
               <Routes>
                 <Route path="/" element={<OverviewScreen />} />
+                <Route path="/pipeline" element={<PipelineScreen />} />
                 <Route path="/investigation" element={<Navigate to="/investigation/INC-2026-8841" replace />} />
                 <Route path="/investigation/:id" element={<InvestigationScreen />} />
                 <Route path="/graph" element={<DependencyGraphScreen />} />

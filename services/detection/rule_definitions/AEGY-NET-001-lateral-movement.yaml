@@ -1,0 +1,42 @@
+# AegisCore Detection Rule: Lateral Movement Across Network Subnets
+# Rule ID: AEGY-NET-001
+# Maps to Scenario 5 (lateral_movement)
+
+id: AEGY-NET-001
+name: Cross-Zone Lateral Movement to Sensitive Database Tier
+description: >
+  Detects network connections from developer or workstation subnets directly
+  to production database ports (e.g. 5432, 3306, 1521, 27017) without passing
+  through an authorized bastion or API tier.
+severity: HIGH
+event_class: NetworkActivity
+activity_names:
+  - NetworkConnect
+  - ThreatDetection
+conditions:
+  all:
+    - field: network.dst_port
+      op: in
+      values: [5432, 3306, 1433, 1521, 27017, 6379]
+  any:
+    - field: actor.extras.technique
+      op: contains
+      value: "Lateral Movement"
+    - field: network.src_ip
+      op: in_cidr
+      values: ["10.50.0.0/16", "192.168.100.0/24"]
+score_contributions:
+  anomaly_score: 0.82
+  threat_confidence_base: 0.70
+  evidence_predicates:
+    - cross_subnet_connection_observed
+    - sensitive_database_port_targeted
+mitre_attack:
+  tactic: Lateral Movement
+  technique: T1021
+  sub_technique: "T1021.001"
+tags:
+  - lateral_movement
+  - network
+  - database_access
+policy_version: v1.0.0

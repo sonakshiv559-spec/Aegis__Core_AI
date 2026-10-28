@@ -1,0 +1,61 @@
+# AegisCore Detection Rule: Token Reuse from Anomalous IP
+# Rule ID: AEGY-AUTH-001
+# Maps to Scenario 1 (token_reuse)
+
+id: AEGY-AUTH-001
+name: Credential Reuse from High-Risk External IP
+description: >
+  Detects OAuth2 token refresh or SSO authentication from a known-malicious,
+  Tor exit node, or datacenter IP that is geographically inconsistent with
+  the user's last verified corporate login. Indicates potential session hijack
+  or credential theft.
+severity: CRITICAL
+event_class: Authentication
+activity_names:
+  - TokenGeneration
+  - Logon
+  - MFAChallenge
+conditions:
+  all:
+    - field: outcome
+      op: eq
+      value: Success
+    - field: network.src_ip
+      op: not_in_cidr
+      values:
+        - "10.0.0.0/8"
+        - "172.16.0.0/12"
+        - "192.168.0.0/16"
+    - field: actor.extras.zone
+      op: not_in
+      values:
+        - InternalNetwork
+        - VPN
+        - CorpWifi
+threat_indicators:
+  - field: network.extras.geo_country
+    label: foreign_country
+    weight: 0.35
+  - field: actor.user_agent
+    label: automation_useragent
+    pattern: "^(curl|python-requests|wget|httpie)"
+    weight: 0.30
+  - field: source_product
+    op: eq
+    value: "Okta Identity"
+    weight: 0.10
+score_contributions:
+  anomaly_score: 0.88
+  threat_confidence_base: 0.65
+  evidence_predicates:
+    - active_session_confirmed
+    - external_ip_flagged
+mitre_attack:
+  tactic: Credential Access
+  technique: T1539
+  sub_technique: "T1539.001"
+tags:
+  - credential_theft
+  - session_hijack
+  - geolocation_anomaly
+policy_version: v1.0.0

@@ -1,0 +1,157 @@
+version: "3.9"
+
+name: aegiscore-ai
+
+services:
+  # ─────────────────────────────────────────
+  # PostgreSQL  – Incidents, Events, Audit Log
+  # ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: aegiscore-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aegiscore
+      POSTGRES_PASSWORD: aegiscore_dev_secret
+      POSTGRES_DB: aegiscore
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegiscore"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # Neo4j  – Asset Dependency Graph
+  # ─────────────────────────────────────────
+  neo4j:
+    image: neo4j:5-community
+    container_name: aegiscore-neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/aegiscore_neo4j_secret
+      NEO4J_PLUGINS: '["apoc"]'
+      NEO4J_dbms_security_procedures_unrestricted: apoc.*
+    ports:
+      - "7474:7474"   # Browser UI
+      - "7687:7687"   # Bolt protocol
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "aegiscore_neo4j_secret", "RETURN 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # Redis  – Deduplication, Rate Limiting, Cache
+  # ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: aegiscore-redis
+    restart: unless-stopped
+    command: redis-server --requirepass aegiscore_redis_secret --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "aegiscore_redis_secret", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # MinIO  – Immutable Raw Event Archive (S3-compatible)
+  # ─────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: aegiscore-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: aegiscore_minio
+      MINIO_ROOT_PASSWORD: aegiscore_minio_secret
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # Console UI
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # MinIO Init  – Create buckets on first run
+  # ─────────────────────────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: aegiscore-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 aegiscore_minio aegiscore_minio_secret;
+        mc mb --ignore-existing local/aegiscore-raw-events;
+        mc mb --ignore-existing local/aegiscore-dead-letter;
+        mc mb --ignore-existing local/aegiscore-audit-exports;
+        mc anonymous set none local/aegiscore-raw-events;
+        echo 'MinIO buckets initialised.';
+      "
+    restart: "no"
+
+  # ─────────────────────────────────────────
+  # AegisCore FastAPI Control Plane
+  # ─────────────────────────────────────────
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    container_name: aegiscore-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://aegiscore:aegiscore_dev_secret@postgres:5432/aegiscore
+      REDIS_URL: redis://:aegiscore_redis_secret@redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: aegiscore_minio
+      MINIO_SECRET_KEY: aegiscore_minio_secret
+      MINIO_RAW_BUCKET: aegiscore-raw-events
+      MINIO_DLQ_BUCKET: aegiscore-dead-letter
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: aegiscore_neo4j_secret
+      AEGISCORE_ENV: development
+      TENANT_ID: tenant-aegis-production-us-east
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../apps/api:/app
+      - ../services:/app/services
+      - ../schemas:/app/schemas
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+  neo4j_data:
+  neo4j_logs:
+  redis_data:
+  minio_data:

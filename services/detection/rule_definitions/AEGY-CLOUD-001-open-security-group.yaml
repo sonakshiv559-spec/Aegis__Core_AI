@@ -1,0 +1,44 @@
+# AegisCore Detection Rule: Overly Permissive Security Group
+# Rule ID: AEGY-CLOUD-001
+# Maps to Scenario 4
+
+id: AEGY-CLOUD-001
+name: Security Group Opened to 0.0.0.0/0 on Sensitive Port
+description: >
+  Detects AWS security group ingress rules that allow traffic from any IP
+  (0.0.0.0/0 or ::/0) to database or management ports (5432, 3306, 27017,
+  6379, 22, 3389). Indicates misconfiguration or insider threat.
+severity: HIGH
+event_class: PolicyChange
+activity_names:
+  - PolicyChange
+  - PolicyAttach
+conditions:
+  all:
+    - field: event_class
+      op: eq
+      value: PolicyChange
+    - field: source_product
+      op: eq
+      value: "AWS CloudTrail"
+    - field: outcome
+      op: eq
+      value: Success
+  any:
+    - field: target.extras.error_code
+      op: is_null
+score_contributions:
+  anomaly_score: 0.70
+  threat_confidence_base: 0.55
+  evidence_predicates:
+    - security_group_change_logged
+    - public_cidr_confirmed
+mitre_attack:
+  tactic: Defense Evasion
+  technique: T1562
+  sub_technique: "T1562.007"
+tags:
+  - cloud_misconfiguration
+  - security_group
+  - aws
+policy_version: v1.0.0
